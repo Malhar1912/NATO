@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html lang="y" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nato_opt.spectral &#8212; NATO 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=5068f21a"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for nato_opt.spectral</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">nato_opt.spectral</span>
+<span class="sd">------------------</span>
+
+<span class="sd">Fourier Spectral Penalty utilities.</span>
+
+<span class="sd">- configurable to apply penalty only to conv kernels and/or linear weights</span>
+<span class="sd">- GPU-aware (uses torch.fft on the same device as the parameters)</span>
+<span class="sd">- optional whitelist/blacklist of module names</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_module_map</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a mapping from module name -&gt; module object for lookup.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_conv_module</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return True if module is a ConvNd (1D/2D/3D)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># All Conv modules in torch inherit from _ConvNd</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.modules.conv</span><span class="w"> </span><span class="kn">import</span> <span class="n">_ConvNd</span>  <span class="c1"># local import for safety</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">_ConvNd</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_linear_module</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="fourier_spectral_penalty">
+<a class="viewcode-back" href="../../modules.html#nato_opt.spectral.fourier_spectral_penalty">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fourier_spectral_penalty</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+    <span class="n">lambda_fsp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+    <span class="n">include_conv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">include_linear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">module_whitelist</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">module_blacklist</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute a Fourier Spectral Penalty (FSP) applied only to selected parameter tensors.</span>
+
+<span class="sd">    Behaviour:</span>
+<span class="sd">      - By default only applies to parameters associated with Conv modules (Conv1d/2d/3d)</span>
+<span class="sd">        and Linear modules, controlled by include_conv / include_linear.</span>
+<span class="sd">      - You can further restrict by `module_whitelist` (only modules with names in the list</span>
+<span class="sd">        will be considered) or exclude by `module_blacklist`.</span>
+<span class="sd">      - The function infers the device from the model parameters if not provided and ensures</span>
+<span class="sd">        the FFT is performed on the same device (so torch.fft runs on GPU when available).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model: torch.nn.Module</span>
+<span class="sd">        lambda_fsp: scaling factor applied to the penalty (float)</span>
+<span class="sd">        include_conv: if True, include convolutional kernels (ConvNd)</span>
+<span class="sd">        include_linear: if True, include linear weights</span>
+<span class="sd">        module_whitelist: iterable of module names to restrict to (optional)</span>
+<span class="sd">        module_blacklist: iterable of module names to exclude (optional)</span>
+<span class="sd">        device: torch.device to accumulate penalty on (optional). If None, inferred.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        torch.Tensor: scalar penalty ready to be added to the loss (on `device`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># infer device from first trainable parameter</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">device</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+    <span class="n">module_map</span> <span class="o">=</span> <span class="n">_get_module_map</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="n">penalty</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">pname</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c1"># identify parent module for this parameter</span>
+        <span class="c1"># e.g. pname &quot;features.conv1.weight&quot; -&gt; module_name &quot;features.conv1&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">pname</span><span class="p">:</span>
+            <span class="n">module_name</span> <span class="o">=</span> <span class="n">pname</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">module_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># top-level parameter with no named module</span>
+
+        <span class="n">module</span> <span class="o">=</span> <span class="n">module_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Module name filters</span>
+        <span class="k">if</span> <span class="n">module_whitelist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">module_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">module_whitelist</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">module_blacklist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="n">module_blacklist</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Select by module type and param name (&quot;weight&quot;)</span>
+        <span class="n">is_weight</span> <span class="o">=</span> <span class="n">pname</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_weight</span><span class="p">:</span>
+            <span class="c1"># skip biases by default; you could add an option to include 1D params</span>
+            <span class="k">continue</span>
+
+        <span class="n">applies</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">module</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">include_conv</span> <span class="ow">and</span> <span class="n">_is_conv_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+                <span class="n">applies</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">include_linear</span> <span class="ow">and</span> <span class="n">_is_linear_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+                <span class="n">applies</span> <span class="o">=</span> <span class="n">applies</span> <span class="ow">or</span> <span class="kc">True</span>  <span class="c1"># include linear</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># No module found (top-level). Heuristic: apply if tensor is 2D and include_linear True</span>
+            <span class="k">if</span> <span class="n">include_linear</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">applies</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">applies</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Move weight to device for FFT operation to leverage GPU if available</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># Do N-D FFT on weight and compute squared magnitude sum</span>
+        <span class="n">w_fft</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="n">penalty</span> <span class="o">=</span> <span class="n">penalty</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w_fft</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">lambda_fsp</span> <span class="o">*</span> <span class="n">penalty</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">NATO</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">NATO Optimizer Modules</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Malhar Pangarkar, Atharva Khambete.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

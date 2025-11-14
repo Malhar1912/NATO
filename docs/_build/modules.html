@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html lang="y" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NATO Optimizer Modules &#8212; NATO 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=5068f21a"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="NATO documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-nato_opt.optimizer">
+<span id="nato-optimizer-modules"></span><h1>NATO Optimizer Modules<a class="headerlink" href="#module-nato_opt.optimizer" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="nato_opt.optimizer.NATOOptimizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nato_opt.optimizer.</span></span><span class="sig-name descname"><span class="pre">NATOOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.999</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_decay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nato_opt/optimizer.html#NATOOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nato_opt.optimizer.NATOOptimizer" title="Link to this definition">¶</a></dt>
+<dd><p>NATO Optimizer (Noise-Augmented Tethered Optimization)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>iterable</em>) -- Parameters to optimize.</p></li>
+<li><p><strong>lr</strong> (<em>float</em>) -- Base learning rate.</p></li>
+<li><p><strong>beta1</strong> (<em>float</em>) -- Exponential decay rates for moment estimates.</p></li>
+<li><p><strong>beta2</strong> (<em>float</em>) -- Exponential decay rates for moment estimates.</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em>) -- Numerical stability term.</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) -- Tether coefficient (encourages small changes relative to previous param).</p></li>
+<li><p><strong>lr_decay</strong> (<em>float</em>) -- Multiplicative LR decay factor.</p></li>
+<li><p><strong>decay_step</strong> (<em>int</em>) -- Number of epochs between decay steps.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="nato_opt.optimizer.NATOOptimizer.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">closure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nato_opt/optimizer.html#NATOOptimizer.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nato_opt.optimizer.NATOOptimizer.step" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a single optimization step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epoch</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) -- If provided, used to compute epoch-wise LR decay.</p></li>
+<li><p><strong>closure</strong> (<em>Optional</em><em>[</em><em>callable</em><em>]</em>) -- A closure that re-evaluates the model and returns the loss.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<section id="nato-opt-spectral">
+<span id="module-nato_opt.spectral"></span><h2>nato_opt.spectral<a class="headerlink" href="#nato-opt-spectral" title="Link to this heading">¶</a></h2>
+<p>Fourier Spectral Penalty utilities.</p>
+<ul class="simple">
+<li><p>configurable to apply penalty only to conv kernels and/or linear weights</p></li>
+<li><p>GPU-aware (uses torch.fft on the same device as the parameters)</p></li>
+<li><p>optional whitelist/blacklist of module names</p></li>
+</ul>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="nato_opt.spectral.fourier_spectral_penalty">
+<span class="sig-prename descclassname"><span class="pre">nato_opt.spectral.</span></span><span class="sig-name descname"><span class="pre">fourier_spectral_penalty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_fsp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_conv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_linear</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_whitelist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_blacklist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">device</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="_modules/nato_opt/spectral.html#fourier_spectral_penalty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nato_opt.spectral.fourier_spectral_penalty" title="Link to this definition">¶</a></dt>
+<dd><p>Compute a Fourier Spectral Penalty (FSP) applied only to selected parameter tensors.</p>
+<dl class="simple">
+<dt>Behaviour:</dt><dd><ul class="simple">
+<li><p>By default only applies to parameters associated with Conv modules (Conv1d/2d/3d)
+and Linear modules, controlled by include_conv / include_linear.</p></li>
+<li><p>You can further restrict by <cite>module_whitelist</cite> (only modules with names in the list
+will be considered) or exclude by <cite>module_blacklist</cite>.</p></li>
+<li><p>The function infers the device from the model parameters if not provided and ensures
+the FFT is performed on the same device (so torch.fft runs on GPU when available).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> -- torch.nn.Module</p></li>
+<li><p><strong>lambda_fsp</strong> -- scaling factor applied to the penalty (float)</p></li>
+<li><p><strong>include_conv</strong> -- if True, include convolutional kernels (ConvNd)</p></li>
+<li><p><strong>include_linear</strong> -- if True, include linear weights</p></li>
+<li><p><strong>module_whitelist</strong> -- iterable of module names to restrict to (optional)</p></li>
+<li><p><strong>module_blacklist</strong> -- iterable of module names to exclude (optional)</p></li>
+<li><p><strong>device</strong> -- torch.device to accumulate penalty on (optional). If None, inferred.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>scalar penalty ready to be added to the loss (on <cite>device</cite>).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<section id="nato-opt-filtering">
+<span id="module-nato_opt.filtering"></span><h2>nato_opt.filtering<a class="headerlink" href="#nato-opt-filtering" title="Link to this heading">¶</a></h2>
+<p>Generalized N-D FFT gradient filtering utilities.</p>
+<ul class="simple">
+<li><p>Works on any tensor dimensionality &gt;= 2 (skips 1-D biases by default)</p></li>
+<li><p>Ensures FFT runs on the gradient tensor's device (so CUDA path used when available)</p></li>
+<li><p>Type hints and docstrings added</p></li>
+</ul>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="nato_opt.filtering.low_pass_filter_gradients">
+<span class="sig-prename descclassname"><span class="pre">nato_opt.filtering.</span></span><span class="sig-name descname"><span class="pre">low_pass_filter_gradients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_place</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/nato_opt/filtering.html#low_pass_filter_gradients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nato_opt.filtering.low_pass_filter_gradients" title="Link to this definition">¶</a></dt>
+<dd><p>Apply an N-dimensional centered low-pass filter to the gradients of <cite>model</cite>'s parameters.</p>
+<dl class="simple">
+<dt>This function:</dt><dd><ul class="simple">
+<li><p>computes an N-D FFT of each parameter gradient tensor (on the tensor's device),</p></li>
+<li><p>zeroes out high-frequency components outside a centered hyper-rectangle defined by
+<cite>cutoff_ratio</cite>,</p></li>
+<li><p>inverse FFTs back and writes the real part into param.grad in-place.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> -- torch.nn.Module</p></li>
+<li><p><strong>cutoff_ratio</strong> -- ratio of frequencies to keep in each dimension (0 &lt; cutoff_ratio &lt;= 1.0)</p></li>
+<li><p><strong>skip_bias</strong> -- whether to skip 1-D parameters (biases)</p></li>
+<li><p><strong>in_place</strong> -- whether to replace param.grad in-place (True recommended)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-nato_opt.utils">
+<dt class="sig sig-object py" id="nato_opt.utils.adjust_learning_rate">
+<span class="sig-prename descclassname"><span class="pre">nato_opt.utils.</span></span><span class="sig-name descname"><span class="pre">adjust_learning_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_decay_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/nato_opt/utils.html#adjust_learning_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nato_opt.utils.adjust_learning_rate" title="Link to this definition">¶</a></dt>
+<dd><p>Adjusts learning rates in optimizer's param groups in-place.</p>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Each group should have 'initial_lr' present.</p></li>
+</ul>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">NATO</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">NATO Optimizer Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#nato_opt.optimizer.NATOOptimizer"><code class="docutils literal notranslate"><span class="pre">NATOOptimizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nato-opt-spectral">nato_opt.spectral</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nato_opt.spectral.fourier_spectral_penalty"><code class="docutils literal notranslate"><span class="pre">fourier_spectral_penalty()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nato-opt-filtering">nato_opt.filtering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nato_opt.filtering.low_pass_filter_gradients"><code class="docutils literal notranslate"><span class="pre">low_pass_filter_gradients()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nato_opt.utils.adjust_learning_rate"><code class="docutils literal notranslate"><span class="pre">adjust_learning_rate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">NATO documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Malhar Pangarkar, Atharva Khambete.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/modules.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
