@@ -1,9 +1,11 @@
 [project]
 name = "nato-opt"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
-    { name="Malhar Pangarkar", email="malharpangarkar19@gmail.com" },
-    { name="Atharva Khambete", email="atharvakhambete1@gmail.com" }
+    { name="Malhar Pangarkar" },
+    { name="Atharva Khambete" },
+    { email="malharpangarkar19@gmail.com" },
+    { email="atharvakhambete1@gmail.com" }
 ]
 description = "NATO Optimizer with Fourier Spectral Penalty (FSP), Kakeya Directional Penalty, and N-D FFT gradient filtering"
 readme = "README.md"
